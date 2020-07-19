@@ -5,11 +5,11 @@ import lombok.Data;
 @Data
 public class LibraryExceptionResponse {
 
-    private String message;
+    private String errorMessage;
 
     public LibraryExceptionResponse() {}
 
-    public LibraryExceptionResponse(String message) {
-        this.message = message;
+    public LibraryExceptionResponse(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

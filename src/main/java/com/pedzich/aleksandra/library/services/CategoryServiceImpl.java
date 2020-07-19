@@ -1,7 +1,9 @@
 package com.pedzich.aleksandra.library.services;
 
+import com.pedzich.aleksandra.library.models.Author;
 import com.pedzich.aleksandra.library.models.Category;
 import com.pedzich.aleksandra.library.repositories.CategoryRepository;
+import com.pedzich.aleksandra.library.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,13 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    private Category findCategoryById(Integer id) {
+        Optional<Category> optCategory = categoryRepository.findById(id);
+        optCategory.orElseThrow(() ->
+                new javax.persistence.EntityNotFoundException(StringUtil.getEntityNotFoundExceptionMessage("Category", id)));
+        return optCategory.get();
+    }
 
     public List<Category> findAll() {
         return categoryRepository.findAll();
@@ -28,15 +37,12 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public void update(Category category) throws EntityNotFoundException {
-        Optional<Category> optCategory = categoryRepository.findById(category.getId());
-        optCategory.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Category with this id doesn't exist"));
+        findCategoryById(category.getId());
         categoryRepository.saveAndFlush(category);
     }
 
     public void delete(Integer id) throws EntityNotFoundException {
-        Optional<Category> optCategory = categoryRepository.findById(id);
-        optCategory.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Category with this id doesn't exist"));
-        categoryRepository.delete(optCategory.get());
+        categoryRepository.delete(findCategoryById(id));
         categoryRepository.flush();
     }
 }

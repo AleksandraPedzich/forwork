@@ -7,6 +7,7 @@ import com.pedzich.aleksandra.library.models.Category;
 import com.pedzich.aleksandra.library.repositories.AuthorRepository;
 import com.pedzich.aleksandra.library.repositories.BookRepository;
 import com.pedzich.aleksandra.library.repositories.CategoryRepository;
+import com.pedzich.aleksandra.library.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +28,37 @@ public class BookServiceImpl implements BookService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    private Author findAuthorById(Integer id) {
+        Optional<Author> optAuthor = authorRepository.findById(id);
+        optAuthor.orElseThrow(() ->
+                new javax.persistence.EntityNotFoundException(StringUtil.getEntityNotFoundExceptionMessage("Author", id)));
+        return optAuthor.get();
+    }
+
+    private Book findBookById(Integer id) {
+        Optional<Book> optBook = bookRepository.findById(id);
+        optBook.orElseThrow(() ->
+                new javax.persistence.EntityNotFoundException(StringUtil.getEntityNotFoundExceptionMessage("Book", id)));
+        return optBook.get();
+    }
+
+    private Category findCategoryById(Integer id) {
+        Optional<Category> optCategory = categoryRepository.findById(id);
+        optCategory.orElseThrow(() ->
+                new javax.persistence.EntityNotFoundException(StringUtil.getEntityNotFoundExceptionMessage("Category", id)));
+        return optCategory.get();
+    }
+
+    private List<Category> findCategoriesByIds(List<Integer> categoryIds) throws EntityNotFoundException {
+        List<Category> categories = null;
+        if (categoryIds != null) {
+            categories = categoryIds.stream()
+                    .map(id -> findCategoryById(id))
+                    .collect(Collectors.toList());
+        }
+        return categories;
+    }
+
     public List<Book> findAll() {
         return bookRepository.findAll();
     }
@@ -35,40 +67,21 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findById(id);
     }
 
-    private List<Category> findCategoriesByIds(List<Integer> categoryIds) throws EntityNotFoundException {
-        List<Category> categories = null;
-        if (categoryIds != null) {
-            categories = categoryIds.stream()
-                    .map(id -> {
-                        Optional<Category> optCategory = categoryRepository.findById(id);
-                        optCategory.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Category with this id doesn't exist"));
-                        return optCategory.get();
-                    })
-                    .collect(Collectors.toList());
-        }
-        return categories;
-    }
-
     public void save(BookDTO bookDTO) {
-        Optional<Author> optAuthor = authorRepository.findById(bookDTO.getAuthorId());
-        optAuthor.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Author with this id doesn't exist"));
+        Author author = findAuthorById(bookDTO.getAuthorId());
         List<Category> categories = findCategoriesByIds(bookDTO.getCategoryIds());
-        bookRepository.saveAndFlush(new Book(bookDTO.getIsbn(), bookDTO.getTitle(), bookDTO.getType(), optAuthor.get(), categories));
+        bookRepository.saveAndFlush(new Book(bookDTO.getIsbn(), bookDTO.getTitle(), bookDTO.getType(), author, categories));
     }
 
     public void update(BookDTO bookDTO) throws EntityNotFoundException {
-        Optional<Author> optAuthor = authorRepository.findById(bookDTO.getAuthorId());
-        optAuthor.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Author with this id doesn't exist"));
-        Optional<Book> optBook = bookRepository.findById(bookDTO.getId());
-        optBook.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Book with this id doesn't exist"));
+        Author author = findAuthorById(bookDTO.getAuthorId());
+        findBookById(bookDTO.getId());
         List<Category> categories = findCategoriesByIds(bookDTO.getCategoryIds());
-        bookRepository.saveAndFlush(new Book(bookDTO.getId(), bookDTO.getIsbn(), bookDTO.getTitle(), bookDTO.getType(), optAuthor.get(), categories));
+        bookRepository.saveAndFlush(new Book(bookDTO.getId(), bookDTO.getIsbn(), bookDTO.getTitle(), bookDTO.getType(), author, categories));
     }
 
     public void delete(Integer id) throws EntityNotFoundException {
-        Optional<Book> optBook = bookRepository.findById(id);
-        optBook.orElseThrow(() -> new javax.persistence.EntityNotFoundException("Book with this id doesn't exist"));
-        bookRepository.delete(optBook.get());
+        bookRepository.delete(findBookById(id));
         bookRepository.flush();
     }
 }
