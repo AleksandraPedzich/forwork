@@ -24,9 +24,7 @@ public class BookController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Book> findById(@PathVariable Integer id) {
-        Optional<Book> book = bookService.findById(id);
-        return book.map(b -> ResponseEntity.ok().body(b))
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok().body(bookService.findById(id));
     }
 
     @PostMapping

@@ -28,8 +28,8 @@ public class CategoryServiceImpl implements CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Optional<Category> findById(Integer id) {
-        return categoryRepository.findById(id);
+    public Category findById(Integer id) {
+        return findCategoryById(id);
     }
 
     public void save(Category category) {

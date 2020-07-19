@@ -63,8 +63,8 @@ public class BookServiceImpl implements BookService {
         return bookRepository.findAll();
     }
 
-    public Optional<Book> findById(Integer id) {
-        return bookRepository.findById(id);
+    public Book findById(Integer id) {
+        return findBookById(id);
     }
 
     public void save(BookDTO bookDTO) {

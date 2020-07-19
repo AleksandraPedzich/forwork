@@ -27,8 +27,8 @@ public class AuthorServiceImpl implements AuthorService {
         return authorRepository.findAll();
     }
 
-    public Optional<Author> findById(Integer id) {
-        return authorRepository.findById(id);
+    public Author findById(Integer id) {
+        return findAuthorById(id);
     }
 
     public void save(Author author) {

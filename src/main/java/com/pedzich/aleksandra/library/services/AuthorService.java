@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface AuthorService {
 
     List<Author> findAll();
-    Optional<Author> findById(Integer id);
+    Author findById(Integer id);
     void save(Author author);
     void update(Author author) throws EntityNotFoundException;
     void delete(Integer id) throws EntityNotFoundException;

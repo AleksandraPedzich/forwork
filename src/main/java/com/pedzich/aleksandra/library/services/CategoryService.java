@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface CategoryService {
 
     List<Category> findAll();
-    Optional<Category> findById(Integer id);
+    Category findById(Integer id);
     void save(Category category);
     void update(Category category) throws EntityNotFoundException;
     void delete(Integer id) throws EntityNotFoundException;

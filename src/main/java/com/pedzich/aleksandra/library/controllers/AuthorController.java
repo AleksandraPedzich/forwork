@@ -23,9 +23,7 @@ public class AuthorController {
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<Author> findById(@PathVariable Integer id) {
-        Optional<Author> author = authorService.findById(id);
-        return author.map(b -> ResponseEntity.ok().body(b))
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok().body(authorService.findById(id));
     }
 
     @PostMapping
