@@ -2,6 +2,7 @@ package com.pedzich.aleksandra.library.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "author")
+@NoArgsConstructor
 public class Author {
 
     @Id
@@ -29,8 +31,6 @@ public class Author {
                 cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Book> books;
-
-    public Author() {}
 
     public Author(String name, String surname, String bio) {
         this.name = name;

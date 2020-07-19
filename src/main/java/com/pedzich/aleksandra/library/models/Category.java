@@ -2,6 +2,7 @@ package com.pedzich.aleksandra.library.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "category")
+@NoArgsConstructor
 public class Category {
 
     @Id
@@ -28,8 +30,6 @@ public class Category {
             inverseJoinColumns = @JoinColumn(name="book_id"))
     @JsonIgnore
     List<Book> books;
-
-    public Category() {}
 
     public Category(String name, String description) {
         this.name = name;

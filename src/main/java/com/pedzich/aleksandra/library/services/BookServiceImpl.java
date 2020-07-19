@@ -67,10 +67,11 @@ public class BookServiceImpl implements BookService {
         return findBookById(id);
     }
 
-    public void save(BookDTO bookDTO) {
+    public Book save(BookDTO bookDTO) {
         Author author = findAuthorById(bookDTO.getAuthorId());
         List<Category> categories = findCategoriesByIds(bookDTO.getCategoryIds());
-        bookRepository.saveAndFlush(new Book(bookDTO.getIsbn(), bookDTO.getTitle(), bookDTO.getType(), author, categories));
+        Book book = bookRepository.saveAndFlush(new Book(bookDTO.getIsbn(), bookDTO.getTitle(), bookDTO.getType(), author, categories));
+        return book;
     }
 
     public void update(BookDTO bookDTO) throws EntityNotFoundException {

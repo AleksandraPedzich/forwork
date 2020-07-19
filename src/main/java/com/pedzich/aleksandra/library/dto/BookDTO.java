@@ -14,4 +14,10 @@ public class BookDTO {
     private Type type;
     private Integer authorId;
     private List<Integer> categoryIds;
+
+    public BookDTO(String isbn, String title, Type type) {
+        this.isbn = isbn;
+        this.title = title;
+        this.type = type;
+    }
 }

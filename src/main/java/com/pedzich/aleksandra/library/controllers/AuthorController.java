@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(path="/authors")
@@ -27,9 +26,9 @@ public class AuthorController {
     }
 
     @PostMapping
-    ResponseEntity<Void> save(@RequestBody Author author) {
+    ResponseEntity<Author> save(@RequestBody Author author) {
         authorService.save(author);
-        return ResponseEntity.status(201).build();
+        return ResponseEntity.status(201).body(author);
     }
 
     @PatchMapping(path = "/{id}")

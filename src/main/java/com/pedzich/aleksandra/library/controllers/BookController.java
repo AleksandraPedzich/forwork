@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(path="/books")
@@ -28,9 +27,9 @@ public class BookController {
     }
 
     @PostMapping
-    ResponseEntity<Void> save(@RequestBody BookDTO bookDTO) {
-        bookService.save(bookDTO);
-        return ResponseEntity.status(201).build();
+    ResponseEntity<Book> save(@RequestBody BookDTO bookDTO) {
+        Book book = bookService.save(bookDTO);
+        return ResponseEntity.status(201).body(book);
     }
 
     @PatchMapping(path = "/{id}")

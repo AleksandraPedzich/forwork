@@ -2,6 +2,7 @@ package com.pedzich.aleksandra.library.models;
 
 import com.pedzich.aleksandra.library.enums.Type;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "book")
+@NoArgsConstructor
 public class Book {
 
     @Id
@@ -41,8 +43,6 @@ public class Book {
         joinColumns = @JoinColumn(name="book_id"),
         inverseJoinColumns = @JoinColumn(name="category_id"))
     List<Category> categories;
-
-    public Book() {}
 
     public Book(Integer id, String isbn, String title, Type type, Author author, List<Category> categories) {
         this.id = id;

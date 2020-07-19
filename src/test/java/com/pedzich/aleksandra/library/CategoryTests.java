@@ -2,6 +2,8 @@ package com.pedzich.aleksandra.library;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pedzich.aleksandra.library.models.Category;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.junit.Assert;
 
 import org.junit.jupiter.api.*;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,11 +38,11 @@ public class CategoryTests {
         return applicationAddress + ":" + applicationPort + uri;
     }
 
-    private ResponseEntity<Void> save(Category category) {
+    private ResponseEntity<Category> save(Category category) {
         HttpEntity<Category> entity = new HttpEntity<>(category, headers);
         return restTemplate.exchange(
                 createURLWithPort("/categories"),
-                HttpMethod.POST, entity, Void.class);
+                HttpMethod.POST, entity, Category.class);
     }
 
     private ResponseEntity<List> findAll() {
@@ -55,10 +58,14 @@ public class CategoryTests {
     }
 
     private ResponseEntity<Void> update(Integer id, Category category) {
+        // Workaround for patch
+        HttpClient client = HttpClients.createDefault();
+        restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory(client));
+
         HttpEntity<Category> entity = new HttpEntity<>(category, headers);
         return restTemplate.exchange(
-                createURLWithPort("/categories/" + id + "?_method=patch"),
-                HttpMethod.POST, entity, Void.class);
+                createURLWithPort("/categories/" + id),
+                HttpMethod.PATCH, entity, Void.class);
     }
 
     private ResponseEntity<Void> delete(Integer id) {
@@ -70,10 +77,10 @@ public class CategoryTests {
     @Test
     @Order(1)
     public void saveCategory() {
-        ResponseEntity<Void> fantasyResponse = save(fantasyCategory);
-        ResponseEntity<Void> romanceResponse = save(romanceCategory);
-
-        System.out.println(fantasyCategory);
+        ResponseEntity<Category> fantasyResponse = save(fantasyCategory);
+        ResponseEntity<Category> romanceResponse = save(romanceCategory);
+        fantasyCategory = fantasyResponse.getBody();
+        romanceCategory = romanceResponse.getBody();
 
         Assert.assertTrue(fantasyResponse.getStatusCode().equals(HttpStatus.CREATED) && romanceResponse.getStatusCode().equals(HttpStatus.CREATED));
         System.out.println("saveCategory passed");
@@ -82,9 +89,9 @@ public class CategoryTests {
     @Test
     @Order(2)
     public void saveCategoryWithNulls() {
-        ResponseEntity<Void> withoutNameResponse = save(categoryWithoutName);
+        ResponseEntity<Category> withoutNameResponse = save(categoryWithoutName);
 
-        Assert.assertEquals(withoutNameResponse.getStatusCode(), HttpStatus.BAD_REQUEST);
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, withoutNameResponse.getStatusCode());
         System.out.println("saveCategoryWithNulls passed");
     }
 
@@ -108,14 +115,7 @@ public class CategoryTests {
                 .count();
         Assert.assertTrue(categoryCount.equals(1L) && romanceCount.equals(1L));
 
-        for (Category category: categories) {
-            if (category.getName().equals("Fantasy"))
-                fantasyCategory = category;
-            else
-                romanceCategory = category;
-        }
-
-        Assert.assertEquals(allCategoriesResponse.getStatusCode(), HttpStatus.OK);
+        Assert.assertEquals(HttpStatus.OK, allCategoriesResponse.getStatusCode());
         System.out.println("findAllCategories passed");
     }
 
@@ -127,11 +127,11 @@ public class CategoryTests {
         ResponseEntity<Category> fantasyResponse = findById(fantasyId);
         ResponseEntity<Category> romanceResponse = findById(romanceId);
 
-        Assert.assertEquals(fantasyResponse.getBody(), fantasyCategory);
-        Assert.assertEquals(romanceResponse.getBody(), romanceCategory);
+        Assert.assertEquals(fantasyCategory, fantasyResponse.getBody());
+        Assert.assertEquals(romanceCategory, romanceResponse.getBody());
 
-        Assert.assertEquals(fantasyResponse.getStatusCode(), HttpStatus.OK);
-        Assert.assertEquals(romanceResponse.getStatusCode(), HttpStatus.OK);
+        Assert.assertEquals(HttpStatus.OK, fantasyResponse.getStatusCode());
+        Assert.assertEquals(HttpStatus.OK, romanceResponse.getStatusCode());
         System.out.println("findCategoryById passed");
     }
 
@@ -140,29 +140,39 @@ public class CategoryTests {
     public void findCategoryByIdWithWrongId() {
         ResponseEntity<Category> wrongIdResponse = findById(9001);
 
-        Assert.assertEquals(wrongIdResponse.getStatusCode(), HttpStatus.NOT_FOUND);
+        Assert.assertEquals(HttpStatus.NOT_FOUND, wrongIdResponse.getStatusCode());
         System.out.println("findCategoryByIdWithWrongId passed");
     }
 
-    /*@Test
+    @Test
     @Order(6)
     public void updateCategory() {
         Integer fantasyId = fantasyCategory.getId();
         fantasyCategory = new Category("Fantasy!", "Often inspired by real world myth and folklore");
+        fantasyCategory.setId(fantasyId);
         ResponseEntity<Void> fantasyUpdateResponse = update(fantasyId, fantasyCategory);
 
-        Assert.assertEquals(fantasyUpdateResponse.getStatusCode(), HttpStatus.ACCEPTED);
+        Assert.assertEquals(HttpStatus.ACCEPTED, fantasyUpdateResponse.getStatusCode());
 
         ResponseEntity<Category> fantasyResponse = findById(fantasyId);
 
-        Assert.assertEquals(fantasyResponse.getBody(), fantasyCategory);
+        Assert.assertEquals(fantasyCategory, fantasyResponse.getBody());
 
-        Assert.assertEquals(fantasyResponse.getStatusCode(), HttpStatus.OK);
-        System.out.println("saveCategory passed");
-    }*/
+        Assert.assertEquals(HttpStatus.OK, fantasyResponse.getStatusCode());
+        System.out.println("updateCategory passed");
+    }
 
     @Test
-    @Order(6)
+    @Order(7)
+    public void updateCategoryWithWrongId() {
+        ResponseEntity<Void> wrongIdResponse = update(9001, fantasyCategory);
+
+        Assert.assertEquals(HttpStatus.NOT_FOUND, wrongIdResponse.getStatusCode());
+        System.out.println("updateCategoryWithWrongId passed");
+    }
+
+    @Test
+    @Order(8)
     public void deleteCategory() {
         Integer fantasyId = fantasyCategory.getId();
         Integer romanceId = romanceCategory.getId();
@@ -170,13 +180,22 @@ public class CategoryTests {
         ResponseEntity<Void> fantasyResponse = delete(fantasyId);
         ResponseEntity<Void> romanceResponse = delete(romanceId);
 
-        Assert.assertEquals(fantasyResponse.getStatusCode(), HttpStatus.NO_CONTENT);
-        Assert.assertEquals(romanceResponse.getStatusCode(), HttpStatus.NO_CONTENT);
+        Assert.assertEquals(HttpStatus.NO_CONTENT, fantasyResponse.getStatusCode());
+        Assert.assertEquals(HttpStatus.NO_CONTENT, romanceResponse.getStatusCode());
 
         ResponseEntity<List> allCategoriesResponse = findAll();
 
-        Assert.assertEquals(allCategoriesResponse.getBody().size(), 0);
-        Assert.assertEquals(allCategoriesResponse.getStatusCode(), HttpStatus.OK);
-        System.out.println("saveCategory passed");
+        Assert.assertEquals(0, allCategoriesResponse.getBody().size());
+        Assert.assertEquals(HttpStatus.OK, allCategoriesResponse.getStatusCode());
+        System.out.println("deleteCategory passed");
+    }
+
+    @Test
+    @Order(9)
+    public void deleteCategoryWithWrongId() {
+        ResponseEntity<Void> wrongIdResponse = delete(9001);
+
+        Assert.assertEquals(HttpStatus.NOT_FOUND, wrongIdResponse.getStatusCode());
+        System.out.println("deleteCategoryWithWrongId passed");
     }
 }

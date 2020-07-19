@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(path="/categories")
@@ -28,9 +27,9 @@ public class CategoryController {
     }
 
     @PostMapping
-    ResponseEntity<Void> save(@RequestBody Category category) {
+    ResponseEntity<Category> save(@RequestBody Category category) {
         categoryService.save(category);
-        return ResponseEntity.status(201).build();
+        return ResponseEntity.status(201).body(category);
     }
 
     @PatchMapping(path = "/{id}")
